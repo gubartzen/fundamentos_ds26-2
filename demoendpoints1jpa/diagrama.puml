@@ -1,0 +1,19 @@
+@startuml C4_Elements
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+Person(app, "App", "consulta validade da assinatura")
+System_Boundary(sysCtrlApp, "SysCtrlApp", "gerencia assinaturas de aplicativos"){
+    Container(gateway, "Gateway", "Spring-Cloud Gateway", "")
+    Container(nameserver, "nameServer", "Spring-Cloud Netflix", "")
+    Container(servPagamentos, "API Pagamentos", "Spring-Boot", "")
+    Container(servCtrlAss, "API Controle Assinaturas", "Spring-Boot", "")
+    ContainerDb(dbAss,"DB Assinaturas","Postgresql")
+    ContainerQueue(msgBroker,"Msg Broker","RabbitMQ")
+}
+System_Ext(banco,"Banco","informa pagamento")
+System_Ext(frontEnd,"FrontEnd Administrativo",
+"interface com o usuário do sistema de controle de assinaturas")
+ Rel_D(app, gateway, "consulta assinatura", "HTTP Rest")
+Rel_L(banco,msgBroker,"pagamento","HTTP Rest")
+Rel_D(frontEnd,gateway,"","HTTP Rest")
+ Rel(gateway,nameserver,"","")
+@enduml

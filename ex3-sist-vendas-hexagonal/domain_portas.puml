@@ -1,0 +1,24 @@
+@startuml domain_portas
+skinparam packageStyle rectangle
+skinparam shadowing false
+top to bottom direction
+
+package "domain.portas.in.casos_de_uso" as in {
+  class CancelarPedidoUC
+  class ConfirmarPedidoUC
+  class CriarPedidoUC
+  class ListarProdutosDisponiveisUC
+  class ListarTodosPedidosUC
+  class ReservarPedidoUC
+  class CriarPedidoCommand <<record>>
+  class ItemCommand <<record>>
+}
+
+package "domain.portas.out.repositorios" as out {
+  interface RepositorioPedidos
+  interface RepositorioProdutos
+}
+
+
+
+@enduml

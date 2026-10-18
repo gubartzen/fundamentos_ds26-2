@@ -1,0 +1,158 @@
+@startuml hexagonal-implmentacao
+
+title
+Arquitetura Hexagonal - Implementacao Completa
+Sistema de Vendas
+end title
+
+top to bottom direction
+hide empty members
+
+package "com.bcopstein.ex3_sist_vendas_hexagonal" {
+  class Ex3SistVendasHexagonalApplication
+}
+
+package "domain.model" {
+  enum EstadoBrasil
+  enum StatusPedido
+
+  class Produto
+  class ItemPedido
+  class Pedido
+
+  class ServicoDesconto
+  class ServicoImposto
+  class ServicoEstoque
+}
+
+package "domain.portas.in.casos_de_uso" {
+  class CriarPedidoUC
+  class ReservarPedidoUC
+  class ConfirmarPedidoUC
+  class CancelarPedidoUC
+  class ListarTodosPedidosUC
+  class ListarProdutosDisponiveisUC
+
+  class CriarPedidoCommand
+  class ItemCommand
+}
+
+package "domain.portas.out.repositorios" {
+  interface RepositorioPedidos
+  interface RepositorioProdutos
+}
+
+package "infra.adapters.in.rest" {
+  class Controller
+  class ItemPedidoRequestDTO
+  class PedidoResponseDTO
+  class ItemPedidoResponseDTO
+  class ProdutoResponseDTO
+}
+
+package "infra.adapters.out.persistencia" {
+  class RepositorioPedidosJPA
+  class RepositorioProdutosJPA
+
+  interface PedidoSpringDataRepository
+  interface ProdutoSpringDataRepository
+
+  class PedidoJpaEntity
+  class ItemPedidoJpaEntity
+  class ProdutoJpaEntity
+}
+
+' Dominio
+Pedido "1" *-- "0..*" ItemPedido
+Pedido --> EstadoBrasil
+Pedido --> StatusPedido
+
+ServicoDesconto ..> Pedido
+ServicoImposto ..> Pedido
+ServicoImposto ..> EstadoBrasil
+ServicoEstoque ..> Pedido
+ServicoEstoque ..> Produto
+ServicoEstoque ..> RepositorioProdutos
+
+' Portas de entrada (casos de uso)
+CriarPedidoCommand "1" *-- "0..*" ItemCommand
+CriarPedidoCommand --> EstadoBrasil
+
+CriarPedidoUC ..> CriarPedidoCommand
+CriarPedidoUC ..> Pedido
+CriarPedidoUC ..> ItemPedido
+CriarPedidoUC ..> RepositorioPedidos
+CriarPedidoUC ..> RepositorioProdutos
+CriarPedidoUC ..> ServicoImposto
+CriarPedidoUC ..> ServicoDesconto
+
+ReservarPedidoUC ..> Pedido
+ReservarPedidoUC ..> StatusPedido
+ReservarPedidoUC ..> RepositorioPedidos
+ReservarPedidoUC ..> ServicoEstoque
+
+ConfirmarPedidoUC ..> Pedido
+ConfirmarPedidoUC ..> StatusPedido
+ConfirmarPedidoUC ..> RepositorioPedidos
+
+CancelarPedidoUC ..> Pedido
+CancelarPedidoUC ..> StatusPedido
+CancelarPedidoUC ..> RepositorioPedidos
+CancelarPedidoUC ..> ServicoEstoque
+
+ListarTodosPedidosUC ..> Pedido
+ListarTodosPedidosUC ..> RepositorioPedidos
+
+ListarProdutosDisponiveisUC ..> Produto
+ListarProdutosDisponiveisUC ..> ServicoEstoque
+
+' Adapter de entrada (REST)
+Controller ..> CriarPedidoUC
+Controller ..> ReservarPedidoUC
+Controller ..> ConfirmarPedidoUC
+Controller ..> CancelarPedidoUC
+Controller ..> ListarTodosPedidosUC
+Controller ..> ListarProdutosDisponiveisUC
+
+Controller ..> EstadoBrasil
+Controller ..> CriarPedidoCommand
+Controller ..> ItemCommand
+Controller ..> ItemPedidoRequestDTO
+Controller ..> PedidoResponseDTO
+Controller ..> ProdutoResponseDTO
+
+PedidoResponseDTO ..> Pedido
+PedidoResponseDTO ..> EstadoBrasil
+PedidoResponseDTO ..> StatusPedido
+PedidoResponseDTO ..> ItemPedido
+PedidoResponseDTO "1" *-- "0..*" ItemPedidoResponseDTO
+
+ProdutoResponseDTO ..> Produto
+
+' Adapter de saida (persistencia)
+RepositorioPedidosJPA ..|> RepositorioPedidos
+RepositorioProdutosJPA ..|> RepositorioProdutos
+
+RepositorioPedidosJPA ..> PedidoSpringDataRepository
+RepositorioPedidosJPA ..> ProdutoSpringDataRepository
+RepositorioPedidosJPA ..> Pedido
+RepositorioPedidosJPA ..> ItemPedido
+RepositorioPedidosJPA ..> StatusPedido
+RepositorioPedidosJPA ..> PedidoJpaEntity
+RepositorioPedidosJPA ..> ItemPedidoJpaEntity
+RepositorioPedidosJPA ..> ProdutoJpaEntity
+
+RepositorioProdutosJPA ..> ProdutoSpringDataRepository
+RepositorioProdutosJPA ..> Produto
+RepositorioProdutosJPA ..> ProdutoJpaEntity
+
+PedidoSpringDataRepository ..> PedidoJpaEntity
+ProdutoSpringDataRepository ..> ProdutoJpaEntity
+
+PedidoJpaEntity "1" *-- "0..*" ItemPedidoJpaEntity
+PedidoJpaEntity --> EstadoBrasil
+PedidoJpaEntity --> StatusPedido
+ItemPedidoJpaEntity --> PedidoJpaEntity
+ItemPedidoJpaEntity --> ProdutoJpaEntity
+
+@enduml

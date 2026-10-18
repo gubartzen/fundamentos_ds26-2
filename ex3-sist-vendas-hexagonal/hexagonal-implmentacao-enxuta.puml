@@ -1,0 +1,129 @@
+@startuml hexagonal-implmentacao-enxuta
+
+title
+Arquitetura Hexagonal - Visao Enxuta
+Sistema de Vendas
+end title
+
+top to bottom direction
+hide empty members
+
+package "domain.model" {
+  enum EstadoBrasil
+  enum StatusPedido
+
+  class Produto
+  class ItemPedido
+  class Pedido
+
+  class ServicoDesconto
+  class ServicoImposto
+  class ServicoEstoque
+}
+
+package "domain.portas.in.casos_de_uso" {
+  class CriarPedidoUC
+  class ReservarPedidoUC
+  class ConfirmarPedidoUC
+  class CancelarPedidoUC
+  class ListarTodosPedidosUC
+  class ListarProdutosDisponiveisUC
+
+  class CriarPedidoCommand
+  class ItemCommand
+}
+
+package "domain.portas.out.repositorios" {
+  interface RepositorioPedidos
+  interface RepositorioProdutos
+}
+
+package "infra.adapters.in.rest" {
+  class Controller
+  class ItemPedidoRequestDTO
+  class PedidoResponseDTO
+  class ItemPedidoResponseDTO
+  class ProdutoResponseDTO
+}
+
+package "infra.adapters.out.persistencia" {
+  class RepositorioPedidosJPA
+  class RepositorioProdutosJPA
+
+  interface PedidoSpringDataRepository
+  interface ProdutoSpringDataRepository
+
+  class PedidoJpaEntity
+  class ItemPedidoJpaEntity
+  class ProdutoJpaEntity
+}
+
+' Nucleo de dominio
+Pedido "1" *-- "0..*" ItemPedido
+Pedido --> EstadoBrasil
+Pedido --> StatusPedido
+
+ServicoDesconto ..> Pedido
+ServicoImposto ..> Pedido
+ServicoEstoque ..> Pedido
+ServicoEstoque ..> Produto
+
+' Porta de entrada -> dominio e portas de saida
+CriarPedidoCommand "1" *-- "0..*" ItemCommand
+
+CriarPedidoUC ..> CriarPedidoCommand
+CriarPedidoUC ..> Pedido
+CriarPedidoUC ..> RepositorioPedidos
+CriarPedidoUC ..> RepositorioProdutos
+CriarPedidoUC ..> ServicoImposto
+CriarPedidoUC ..> ServicoDesconto
+
+ReservarPedidoUC ..> Pedido
+ReservarPedidoUC ..> RepositorioPedidos
+ReservarPedidoUC ..> ServicoEstoque
+
+ConfirmarPedidoUC ..> Pedido
+ConfirmarPedidoUC ..> RepositorioPedidos
+
+CancelarPedidoUC ..> Pedido
+CancelarPedidoUC ..> RepositorioPedidos
+CancelarPedidoUC ..> ServicoEstoque
+
+ListarTodosPedidosUC ..> RepositorioPedidos
+ListarProdutosDisponiveisUC ..> ServicoEstoque
+
+' Adapter de entrada (driver)
+Controller ..> CriarPedidoUC
+Controller ..> ReservarPedidoUC
+Controller ..> ConfirmarPedidoUC
+Controller ..> CancelarPedidoUC
+Controller ..> ListarTodosPedidosUC
+Controller ..> ListarProdutosDisponiveisUC
+
+Controller ..> ItemPedidoRequestDTO
+Controller ..> PedidoResponseDTO
+Controller ..> ProdutoResponseDTO
+
+PedidoResponseDTO ..> Pedido
+PedidoResponseDTO "1" *-- "0..*" ItemPedidoResponseDTO
+ProdutoResponseDTO ..> Produto
+
+' Adapter de saida (driven)
+RepositorioPedidosJPA ..|> RepositorioPedidos
+RepositorioProdutosJPA ..|> RepositorioProdutos
+
+RepositorioPedidosJPA ..> PedidoSpringDataRepository
+RepositorioPedidosJPA ..> ProdutoSpringDataRepository
+RepositorioPedidosJPA ..> PedidoJpaEntity
+RepositorioPedidosJPA ..> ItemPedidoJpaEntity
+
+RepositorioProdutosJPA ..> ProdutoSpringDataRepository
+RepositorioProdutosJPA ..> ProdutoJpaEntity
+
+PedidoSpringDataRepository ..> PedidoJpaEntity
+ProdutoSpringDataRepository ..> ProdutoJpaEntity
+
+PedidoJpaEntity "1" *-- "0..*" ItemPedidoJpaEntity
+ItemPedidoJpaEntity --> ProdutoJpaEntity
+
+@enduml

@@ -1,0 +1,225 @@
+@startuml dominio
+skinparam classAttributeIconSize 0
+
+title
+Diagrama de Classes e Pacotes do Dominio
+Sistema de vendas
+end title
+
+package "domain.model" {
+  enum EstadoBrasil {
+    AC
+    AL
+    AP
+    AM
+    BA
+    CE
+    DF
+    ES
+    GO
+    MA
+    MT
+    MS
+    MG
+    PA
+    PB
+    PR
+    PE
+    PI
+    RJ
+    RN
+    RS
+    RO
+    RR
+    SC
+    SP
+    SE
+    TO
+  }
+
+  enum StatusPedido {
+    NOVO
+    RESERVADO
+    CONFIRMADO
+    CANCELADO
+  }
+
+  class Produto {
+    - id: long
+    - descricao: String
+    - preco: double
+    + Produto(id: long, descricao: String, preco: double)
+    + getId(): long
+    + getDescricao(): String
+    + getPreco(): double
+    + toString(): String
+  }
+
+  class ItemPedido {
+    - produtoId: long
+    - quantidade: int
+    - precoProdutoConsiderado: double
+    + ItemPedido(produtoId: long, quantidade: int, precoProdutoConsiderado: double)
+    + getProdutoId(): long
+    + getQuantidade(): int
+    + getPrecoProdutoConsiderado(): double
+    + calculaValorItem(): double
+  }
+
+  class Pedido {
+    - id: long
+    - data: LocalDate
+    - status: StatusPedido
+    - estado: EstadoBrasil
+    - imposto: double
+    - desconto: double
+    - valorFinal: double
+    - itens: List<ItemPedido>
+    + Pedido(id: long, data: LocalDate, estado: EstadoBrasil)
+    + getId(): long
+    + getStatus(): StatusPedido
+    + getEstado(): EstadoBrasil
+    + getData(): LocalDate
+    + getItens(): Stream<ItemPedido>
+    + defineStatus(status: StatusPedido): void
+    + acrescentarItem(item: ItemPedido): void
+    + getImposto(): double
+    + getDesconto(): double
+    + getValorFinal(): double
+    + getQtdadeItens(): int
+    + somatorio(): double
+    + calculaCusto(imposto: double, desconto: double): void
+  }
+
+  class ServicoDesconto {
+    + calculaDesconto(pedido: Pedido): double
+  }
+
+  class ServicoImposto {
+    + calcularImposto(estado: EstadoBrasil, pedido: Pedido): double
+  }
+
+  class ServicoEstoque {
+    - estoque: Map<Long, Integer>
+    - reservados: Map<Long, Pedido>
+    - repositorioProdutos: RepositorioProdutos
+    + ServicoEstoque(repositorioProdutos: RepositorioProdutos)
+    + consultarDisponibilidadePorProdutoId(produtoId: long): int
+    + baixarEstoquePorProdutoId(produtoId: long, quantidade: int): void
+    + reporEstoquePorProdutoId(produtoId: long, quantidade: int): void
+    + reservaPedido(pedido: Pedido): boolean
+    + liberarReservas(pedido: Pedido): void
+    + produtosDisponiveis(): List<Produto>
+  }
+}
+
+package "domain.portas.in.casos_de_uso" {
+  class CancelarPedidoUC {
+    - servicoEstoque: ServicoEstoque
+    - repositorioPedidos: RepositorioPedidos
+    + CancelarPedidoUC(servicoEstoque: ServicoEstoque, repositorioPedidos: RepositorioPedidos)
+    + executar(pedidoId: Long): Pedido
+  }
+
+  class ConfirmarPedidoUC {
+    - repositorioPedidos: RepositorioPedidos
+    + ConfirmarPedidoUC(repositorioPedidos: RepositorioPedidos)
+    + executar(pedidoId: Long): Pedido
+  }
+
+  class CriarPedidoUC {
+    - repositorioPedidos: RepositorioPedidos
+    - repositorioProdutos: RepositorioProdutos
+    - servicoImposto: ServicoImposto
+    - servicoDesconto: ServicoDesconto
+    + CriarPedidoUC(repositorioPedidos: RepositorioPedidos, repositorioProdutos: RepositorioProdutos, servicoImposto: ServicoImposto, servicoDesconto: ServicoDesconto)
+    + executar(pedidoCommand: CriarPedidoCommand): Pedido
+  }
+
+  class ListarProdutosDisponiveisUC {
+    - servicoEstoque: ServicoEstoque
+    + ListarProdutosDisponiveisUC(servicoEstoque: ServicoEstoque)
+    + executar(): List<Produto>
+  }
+
+  class ListarTodosPedidosUC {
+    - repositorioPedidos: RepositorioPedidos
+    + ListarTodosPedidosUC(repositorioPedidos: RepositorioPedidos)
+    + executar(): List<Pedido>
+  }
+
+  class ReservarPedidoUC {
+    - servicoEstoque: ServicoEstoque
+    - repositorioPedidos: RepositorioPedidos
+    + ReservarPedidoUC(servicoEstoque: ServicoEstoque, repositorioPedidos: RepositorioPedidos)
+    + executar(pedidoId: long): Pedido
+  }
+
+  class CriarPedidoCommand <<record>> {
+    + itens: List<ItemCommand>
+    + estado: EstadoBrasil
+  }
+
+  class ItemCommand <<record>> {
+    + produtoId: Long
+    + quantidade: int
+  }
+}
+
+package "domain.portas.out.repositorios" {
+  interface RepositorioPedidos {
+    + persiste(pedido: Pedido): Pedido
+    + recuperaPedido(id: long): Pedido
+    + todosPedidos(): List<Pedido>
+  }
+
+  interface RepositorioProdutos {
+    + recuperaProduto(id: long): Produto
+    + persiste(produto: Produto): Produto
+    + recuperaTodos(): List<Produto>
+  }
+}
+
+Pedido "1" *-- "0..*" ItemPedido : itens
+Pedido --> StatusPedido
+Pedido --> EstadoBrasil
+
+ServicoDesconto ..> Pedido
+ServicoImposto ..> Pedido
+ServicoImposto ..> EstadoBrasil
+ServicoEstoque ..> Pedido
+ServicoEstoque ..> Produto
+ServicoEstoque ..> RepositorioProdutos
+
+CancelarPedidoUC ..> ServicoEstoque
+CancelarPedidoUC ..> RepositorioPedidos
+CancelarPedidoUC ..> Pedido
+
+ConfirmarPedidoUC ..> RepositorioPedidos
+ConfirmarPedidoUC ..> Pedido
+
+CriarPedidoUC ..> RepositorioPedidos
+CriarPedidoUC ..> RepositorioProdutos
+CriarPedidoUC ..> ServicoImposto
+CriarPedidoUC ..> ServicoDesconto
+CriarPedidoUC ..> CriarPedidoCommand
+CriarPedidoUC ..> ItemPedido
+CriarPedidoUC ..> Pedido
+
+ReservarPedidoUC ..> ServicoEstoque
+ReservarPedidoUC ..> RepositorioPedidos
+ReservarPedidoUC ..> Pedido
+
+ListarTodosPedidosUC ..> RepositorioPedidos
+ListarTodosPedidosUC ..> Pedido
+
+ListarProdutosDisponiveisUC ..> ServicoEstoque
+ListarProdutosDisponiveisUC ..> Produto
+
+CriarPedidoCommand ..> ItemCommand
+CriarPedidoCommand ..> EstadoBrasil
+
+RepositorioPedidos ..> Pedido
+RepositorioProdutos ..> Produto
+
+@enduml

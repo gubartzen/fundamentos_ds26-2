@@ -1,0 +1,84 @@
+@startuml dominio-simplificado
+
+title
+Diagrama Simplificado - Relacionamentos Principais
+Sistema de Vendas
+end title
+
+package "domain.model" {
+  enum EstadoBrasil
+  enum StatusPedido
+  
+  class Produto {
+    - id: long
+    - descricao: String
+    - preco: double
+  }
+  
+  class ItemPedido {
+    - produtoId: long
+    - quantidade: int
+    - precoProdutoConsiderado: double
+  }
+  
+  class Pedido {
+    - id: long
+    - data: LocalDate
+    - status: StatusPedido
+    - estado: EstadoBrasil
+    - imposto: double
+    - desconto: double
+    - valorFinal: double
+    - itens: List<ItemPedido>
+  }
+  
+  class ServicoDesconto
+  class ServicoImposto
+  class ServicoEstoque
+}
+
+package "domain.portas.in.casos_de_uso" {
+  class CancelarPedidoUC
+  class ConfirmarPedidoUC
+  class CriarPedidoUC
+  class ReservarPedidoUC
+  class ListarTodosPedidosUC
+  class ListarProdutosDisponiveisUC
+}
+
+package "domain.portas.out.repositorios" {
+  interface RepositorioPedidos
+  interface RepositorioProdutos
+}
+
+' Relacionamentos do modelo
+Pedido "1" *-- "0..*" ItemPedido
+Pedido --> StatusPedido
+Pedido --> EstadoBrasil
+
+' Relacionamentos dos serviços
+ServicoDesconto ..> Pedido
+ServicoImposto ..> Pedido
+ServicoEstoque ..> Pedido
+ServicoEstoque ..> Produto
+
+' Relacionamentos dos casos de uso com repositórios
+CriarPedidoUC ..|> RepositorioPedidos
+CriarPedidoUC ..|> RepositorioProdutos
+ConfirmarPedidoUC ..|> RepositorioPedidos
+CancelarPedidoUC ..|> RepositorioPedidos
+ReservarPedidoUC ..|> RepositorioPedidos
+ListarTodosPedidosUC ..|> RepositorioPedidos
+ListarProdutosDisponiveisUC ..|> ServicoEstoque
+
+' Relacionamentos dos casos de uso com serviços
+CriarPedidoUC ..|> ServicoImposto
+CriarPedidoUC ..|> ServicoDesconto
+ReservarPedidoUC ..|> ServicoEstoque
+CancelarPedidoUC ..|> ServicoEstoque
+
+' Interfaces usam entidades
+RepositorioPedidos ..> Pedido
+RepositorioProdutos ..> Produto
+
+@enduml

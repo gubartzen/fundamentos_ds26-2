@@ -1,0 +1,94 @@
+@startuml hexagonal-implmentacao-ultra-enxuta
+
+title
+Arquitetura Hexagonal - Visao Ultra Enxuta
+Sistema de Vendas
+end title
+
+left to right direction
+hide empty members
+
+package "infra.adapters.in.rest" as pIn {
+  class Controller
+}
+
+package "domain.portas.in.casos_de_uso" as pUc {
+  class CriarPedidoUC
+  class ReservarPedidoUC
+  class ConfirmarPedidoUC
+  class CancelarPedidoUC
+  class ListarTodosPedidosUC
+  class ListarProdutosDisponiveisUC
+}
+
+package "domain.model" as pDom {
+  class Pedido
+  class ItemPedido
+  class Produto
+
+  class ServicoDesconto
+  class ServicoImposto
+  class ServicoEstoque
+
+  enum EstadoBrasil
+  enum StatusPedido
+}
+
+package "domain.portas.out.repositorios" as pOut {
+  interface RepositorioPedidos
+  interface RepositorioProdutos
+}
+
+package "infra.adapters.out.persistencia" as pPers {
+  class RepositorioPedidosJPA
+  class RepositorioProdutosJPA
+}
+
+' Fluxo de entrada (lado esquerdo/driver)
+Controller ..> CriarPedidoUC
+Controller ..> ReservarPedidoUC
+Controller ..> ConfirmarPedidoUC
+Controller ..> CancelarPedidoUC
+Controller ..> ListarTodosPedidosUC
+Controller ..> ListarProdutosDisponiveisUC
+
+' Casos de uso e regras de negocio
+CriarPedidoUC ..> Pedido
+CriarPedidoUC ..> ServicoImposto
+CriarPedidoUC ..> ServicoDesconto
+CriarPedidoUC ..> RepositorioPedidos
+CriarPedidoUC ..> RepositorioProdutos
+
+ReservarPedidoUC ..> Pedido
+ReservarPedidoUC ..> ServicoEstoque
+ReservarPedidoUC ..> RepositorioPedidos
+
+ConfirmarPedidoUC ..> Pedido
+ConfirmarPedidoUC ..> RepositorioPedidos
+
+CancelarPedidoUC ..> Pedido
+CancelarPedidoUC ..> ServicoEstoque
+CancelarPedidoUC ..> RepositorioPedidos
+
+ListarTodosPedidosUC ..> RepositorioPedidos
+ListarProdutosDisponiveisUC ..> ServicoEstoque
+
+' Modelo e servicos de dominio
+Pedido "1" *-- "0..*" ItemPedido
+Pedido --> EstadoBrasil
+Pedido --> StatusPedido
+ServicoEstoque ..> Produto
+ServicoEstoque ..> Pedido
+ServicoEstoque ..> RepositorioProdutos
+
+' Fluxo de saida (lado direito/driven)
+RepositorioPedidosJPA ..|> RepositorioPedidos
+RepositorioProdutosJPA ..|> RepositorioProdutos
+
+' Forca visual em colunas (esquerda -> direita)
+pIn -[hidden]right-> pUc
+pUc -[hidden]right-> pDom
+pDom -[hidden]right-> pOut
+pOut -[hidden]right-> pPers
+
+@enduml

@@ -1,0 +1,10 @@
+MERGE INTO produtos (id, descricao, preco) KEY (id) VALUES (1, 'Notebook Ultra 14', 5499.90);
+MERGE INTO produtos (id, descricao, preco) KEY (id) VALUES (2, 'Mouse Sem Fio Pro', 199.90);
+MERGE INTO produtos (id, descricao, preco) KEY (id) VALUES (3, 'Teclado Mecanico TKL', 429.90);
+MERGE INTO produtos (id, descricao, preco) KEY (id) VALUES (4, 'Monitor 27 QHD', 1899.00);
+MERGE INTO produtos (id, descricao, preco) KEY (id) VALUES (5, 'Headset Gamer X', 359.90);
+MERGE INTO produtos (id, descricao, preco) KEY (id) VALUES (6, 'Webcam Full HD', 279.90);
+MERGE INTO produtos (id, descricao, preco) KEY (id) VALUES (7, 'SSD NVMe 1TB', 499.90);
+MERGE INTO produtos (id, descricao, preco) KEY (id) VALUES (8, 'Hub USB-C 8 em 1', 249.90);
+MERGE INTO produtos (id, descricao, preco) KEY (id) VALUES (9, 'Cadeira Ergonomica', 1499.00);
+MERGE INTO produtos (id, descricao, preco) KEY (id) VALUES (10, 'Nobreak 1200VA', 899.90);

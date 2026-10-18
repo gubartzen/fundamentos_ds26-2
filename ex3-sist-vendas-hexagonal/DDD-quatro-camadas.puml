@@ -1,0 +1,99 @@
+@startuml ddd4camadas
+
+top to bottom direction
+
+title
+Diagrama DDD - Quatro camadas
+Sistema de Vendas
+end title
+
+package "domain" {
+  enum EstadoBrasil
+  enum StatusPedido
+  
+  class Produto {
+    - id: long
+    - descricao: String
+    - preco: double
+  }
+  
+  class ItemPedido {
+    - produtoId: long
+    - quantidade: int
+    - precoProdutoConsiderado: double
+  }
+  
+  class Pedido {
+    - id: long
+    - data: LocalDate
+    - status: StatusPedido
+    - estado: EstadoBrasil
+    - imposto: double
+    - desconto: double
+    - valorFinal: double
+    - itens: List<ItemPedido>
+  }
+  
+  class ServicoDesconto
+  class ServicoImposto
+  class ServicoEstoque
+}
+
+package "Aplicacao" {
+  class CancelarPedidoUC
+  class ConfirmarPedidoUC
+  class CriarPedidoUC
+  class ReservarPedidoUC
+  class ListarTodosPedidosUC
+  class ListarProdutosDisponiveisUC
+}
+
+package "interface" {
+  class Controller
+}
+
+package "infraestutura" {
+  class RepositorioPedidos
+  class RepositorioProdutos
+}
+
+' Forca a ordem visual das 4 camadas
+interface -[hidden]down-> Aplicacao
+Aplicacao -[hidden]down-> domain
+domain -[hidden]down-> infraestutura
+
+' Relacionamentos do modelo
+Pedido "1" *-- "0..*" ItemPedido
+Pedido --> StatusPedido
+Pedido --> EstadoBrasil
+
+' Relacionamentos dos serviços
+ServicoDesconto ..> Pedido
+ServicoImposto ..> Pedido
+ServicoEstoque ..> Pedido
+ServicoEstoque ..> Produto
+
+' Relacionamentos do Controller com os casos de uso
+Controller ..> CriarPedidoUC
+Controller ..> ListarProdutosDisponiveisUC
+Controller ..> ReservarPedidoUC
+Controller ..> CancelarPedidoUC
+Controller ..> ConfirmarPedidoUC
+Controller ..> ListarTodosPedidosUC
+
+' Relacionamentos dos casos de uso com repositórios
+CriarPedidoUC ..|> RepositorioPedidos
+CriarPedidoUC ..|> RepositorioProdutos
+ConfirmarPedidoUC ..|> RepositorioPedidos
+CancelarPedidoUC ..|> RepositorioPedidos
+ReservarPedidoUC ..|> RepositorioPedidos
+ListarTodosPedidosUC ..|> RepositorioPedidos
+ListarProdutosDisponiveisUC ..|> ServicoEstoque
+
+' Relacionamentos dos casos de uso com serviços
+CriarPedidoUC ..|> ServicoImposto
+CriarPedidoUC ..|> ServicoDesconto
+ReservarPedidoUC ..|> ServicoEstoque
+CancelarPedidoUC ..|> ServicoEstoque
+
+@enduml

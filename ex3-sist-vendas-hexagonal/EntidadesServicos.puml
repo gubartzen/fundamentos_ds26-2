@@ -1,0 +1,128 @@
+@startuml diagrama-classes-dominio
+
+title
+Sistema de vendas: Entidades e Serviços
+end title
+
+enum StatusPedido {
+    NOVO
+    RESERVADO
+    CONFIRMADO
+    CANCELADO
+}
+
+enum EstadoBrasil {
+    AC
+    AL
+    AP
+    AM
+    BA
+    CE
+    DF
+    ES
+    GO
+    MA
+    MT
+    MS
+    MG
+    PA
+    PB
+    PR
+    PE
+    PI
+    RJ
+    RN
+    RS
+    RO
+    RR
+    SC
+    SP
+    SE
+    TO
+}
+
+class Produto {
+    - id: long
+    - descricao: String
+    - preco: double
+    '+ Produto(id: long, descricao: String, preco: double)
+    + getId(): long
+    + getDescricao(): String
+    + getPreco(): double
+}
+
+class ItemPedido {
+    - produtoId: long
+    - quantidade: int
+    - precoProdutoConsiderado: double
+    '+ ItemPedido(produtoId: long, quantidade: int, precoProdutoConsiderado: double)
+    + getProdutoId(): long
+    + getQuantidade(): int
+    + getPrecoProdutoConsiderado(): double
+    + calculaValorItem(): double
+}
+
+class Pedido {
+    - id: long
+    - data: LocalDate
+    - status: StatusPedido
+    - estado: EstadoBrasil
+    - imposto: double
+    - desconto: double
+    - valorFinal: double
+    - itens: List<ItemPedido>
+    '+ Pedido(id: long, data: LocalDate, estado: EstadoBrasil)
+    + getId(): long
+    + getStatus(): StatusPedido
+    + getEstado(): EstadoBrasil
+    + getData(): LocalDate
+    + getItens(): Stream<ItemPedido>
+    + getImposto(): double
+    + getDesconto(): double
+    + getValorFinal(): double
+    + getQtdadeItens(): int
+    + defineStatus(status: StatusPedido): void
+    + acrescentarItem(item: ItemPedido): void
+    + somatorio(): double
+    + calculaCusto(imposto: double, desconto: double): void
+}
+
+
+class ServicoImposto {
+    + calcularImposto(estado: EstadoBrasil, pedido: Pedido): double
+}
+
+class ServicoDesconto {
+    + calculaDesconto(pedido: Pedido): double
+}
+
+class ServicoEstoque {
+    - estoque: Map<Long, Integer>
+    - reservados: Map<Long, Pedido>
+    - repositorioProdutos: RepositorioProdutos
+    '+ ServicoEstoque(repositorioProdutos: RepositorioProdutos)
+    + consultarDisponibilidadePorProdutoId(produtoId: long): int
+    + baixarEstoquePorProdutoId(produtoId: long, quantidade: int): void
+    + reporEstoquePorProdutoId(produtoId: long, quantidade: int): void
+    + reservaPedido(pedido: Pedido): boolean
+    + liberarReservas(pedido: Pedido): void
+    + produtosDisponiveis(): List<Produto>
+}
+
+Pedido "1" *-- "0..*" ItemPedido : contém
+Pedido --> StatusPedido : usa
+Pedido --> EstadoBrasil : usa
+
+ServicoImposto --> EstadoBrasil : usa
+ServicoImposto --> Pedido : usa
+ServicoDesconto --> Pedido : usa
+ServicoEstoque --> Pedido : usa
+ServicoEstoque --> Produto : usa
+
+hide EstadoBrasil attributes
+hide ServicoEstoque attributes
+hide Pedido attributes
+hide Produto attributes
+hide ItemPedido attributes
+
+@enduml

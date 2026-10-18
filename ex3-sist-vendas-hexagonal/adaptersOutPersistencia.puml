@@ -1,0 +1,41 @@
+@startuml adaptersOutPersistencia
+skinparam packageStyle rectangle
+skinparam shadowing false
+top to bottom direction
+
+package "domain.portas.out.repositorios" as domain_ports {
+  interface RepositorioPedidos
+  interface RepositorioProdutos
+}
+
+package "infra.adapters.out.persistencia" as persistencia {
+  class RepositorioPedidosJPA <<Repository>>
+  class RepositorioProdutosJPA <<Repository>>
+
+  interface PedidoSpringDataRepository <<Spring Data>>
+  interface ProdutoSpringDataRepository <<Spring Data>>
+
+  class PedidoJpaEntity <<Entity>>
+  class ItemPedidoJpaEntity <<Entity>>
+  class ProdutoJpaEntity <<Entity>>
+}
+
+domain_ports -[hidden]down-> persistencia
+RepositorioPedidos -[hidden]down-> RepositorioPedidosJPA
+RepositorioProdutos -[hidden]down-> RepositorioProdutosJPA
+
+RepositorioPedidosJPA ..|> RepositorioPedidos
+RepositorioProdutosJPA ..|> RepositorioProdutos
+
+RepositorioPedidosJPA --> PedidoSpringDataRepository
+RepositorioPedidosJPA --> ProdutoSpringDataRepository
+RepositorioProdutosJPA --> ProdutoSpringDataRepository
+
+PedidoSpringDataRepository ..> PedidoJpaEntity
+ProdutoSpringDataRepository ..> ProdutoJpaEntity
+
+PedidoJpaEntity "1" *-- "0..*" ItemPedidoJpaEntity : itens
+ItemPedidoJpaEntity "*" --> "1" PedidoJpaEntity : pedido
+ItemPedidoJpaEntity "*" --> "1" ProdutoJpaEntity : produto
+
+@enduml
